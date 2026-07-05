@@ -17,6 +17,7 @@ if (url && token) {
 }
 
 const DATA_FILE = path.join(__dirname, 'reports.json');
+const isVercel = !!process.env.VERCEL;
 
 async function loadReports() {
   if (kv) {
@@ -42,11 +43,17 @@ async function saveReport(report) {
     try {
       await kv.set('reports', JSON.stringify(reports));
     } catch (err) {
-      console.error('KV set reports error, saving to local file:', err);
-      fs.writeFileSync(DATA_FILE, JSON.stringify(reports, null, 2));
+      console.error('KV set reports error:', err);
+      if (!isVercel) {
+        fs.writeFileSync(DATA_FILE, JSON.stringify(reports, null, 2));
+      }
     }
   } else {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(reports, null, 2));
+    if (!isVercel) {
+      fs.writeFileSync(DATA_FILE, JSON.stringify(reports, null, 2));
+    } else {
+      console.error('Error: KV is not configured on Vercel. Cannot save report.');
+    }
   }
   return reports.length;
 }
@@ -60,11 +67,17 @@ async function resolveReport(timestamp) {
       try {
         await kv.set('reports', JSON.stringify(reports));
       } catch (err) {
-        console.error('KV set reports error on resolve, saving to local file:', err);
-        fs.writeFileSync(DATA_FILE, JSON.stringify(reports, null, 2));
+        console.error('KV set reports error on resolve:', err);
+        if (!isVercel) {
+          fs.writeFileSync(DATA_FILE, JSON.stringify(reports, null, 2));
+        }
       }
     } else {
-      fs.writeFileSync(DATA_FILE, JSON.stringify(reports, null, 2));
+      if (!isVercel) {
+        fs.writeFileSync(DATA_FILE, JSON.stringify(reports, null, 2));
+      } else {
+        console.error('Error: KV is not configured on Vercel. Cannot resolve report.');
+      }
     }
     return { success: true, report };
   }
