@@ -4,13 +4,13 @@ const path = require('path');
 let kv = null;
 const sessions = {}; // in-memory session fallback for local
 
-if (process.env.KV_REST_API_URL) {
+const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+
+if (url && token) {
   try {
     const { createClient } = require('@vercel/kv');
-    kv = createClient({
-      url: process.env.KV_REST_API_URL,
-      token: process.env.KV_REST_API_TOKEN,
-    });
+    kv = createClient({ url, token });
   } catch (err) {
     console.warn('Failed to initialize Vercel KV client:', err);
   }

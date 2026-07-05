@@ -83,10 +83,11 @@ git push -u origin main
    - `BOT_TOKEN`: Your Telegram Bot Token.
 3. Click **Deploy**.
 
-### 3. Attach a KV Database
-1. Under your project page on Vercel, go to the **Storage** tab.
-2. Select **KV**, and click **Connect**.
-3. Vercel will automatically connect Upstash Redis and inject the database secrets (`KV_REST_API_URL` and `KV_REST_API_TOKEN`) into your server.
+### 3. Attach a Database (Upstash Redis)
+Since Vercel has replaced its native "KV" option with Marketplace integrations, you should connect **Upstash Redis**:
+1. Go to your Vercel project dashboard, click the **Integrations** tab (or visit the [Vercel Marketplace](https://vercel.com/integrations)).
+2. Search for **Upstash Redis** and click **Add Integration** / **Connect**.
+3. Follow the prompts to create or link an Upstash Redis database. Once linked, Vercel will automatically inject the database secrets (`UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`) into your project variables!
 
 ### 4. Hook up the Webhook
 Instruct Telegram to send new messages directly to your Vercel deployment (replace `<YOUR_BOT_TOKEN>` with your token, and `<YOUR_VERCEL_DOMAIN>` with your live URL, e.g. `transit-voice.vercel.app`):

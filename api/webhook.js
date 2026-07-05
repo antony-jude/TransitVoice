@@ -3,8 +3,8 @@ const initBot = require('../bot');
 
 const TOKEN = process.env.BOT_TOKEN;
 
-// Initialize TelegramBot in webhook mode (without active polling)
-const bot = new TelegramBot(TOKEN, { webHook: true });
+// Initialize TelegramBot without polling or internal webHook server (passive mode for serverless)
+const bot = new TelegramBot(TOKEN);
 initBot(bot);
 
 module.exports = async (req, res) => {
