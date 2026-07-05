@@ -1,5 +1,7 @@
 # 🚍 TransitVoice — MTC Issue Reports Bot & Dashboard
 
+**Live Web Dashboard:** [https://transit-voice.vercel.app/](https://transit-voice.vercel.app/)
+
 TransitVoice is a dual-system prototype designed to report transit issues (e.g. overcrowding, delays, safety concerns) in under 30 seconds. It consists of an interactive **Telegram Bot** and a real-time **Sky Blue Web Dashboard** built with modern aesthetics.
 
 Restructured to deploy on **Vercel** as serverless functions backed by **Vercel KV**, with seamless support for local development.
@@ -87,8 +89,20 @@ git push -u origin main
 3. Vercel will automatically connect Upstash Redis and inject the database secrets (`KV_REST_API_URL` and `KV_REST_API_TOKEN`) into your server.
 
 ### 4. Hook up the Webhook
-Instruct Telegram to send new messages directly to your Vercel deployment:
+Instruct Telegram to send new messages directly to your Vercel deployment (replace `<YOUR_BOT_TOKEN>` with your token, and `<YOUR_VERCEL_DOMAIN>` with your live URL, e.g. `transit-voice.vercel.app`):
 ```text
 https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://<YOUR_VERCEL_DOMAIN>/api/webhook
 ```
-*(Once Telegram returns `{"ok":true,"result":true}`, your serverless bot will be live 24/7!)*
+*(Once Telegram returns `{"ok":true,"result":true,"description":"Webhook was set"}` in your browser, the bot is officially connected).*
+
+---
+
+## ⚡ How the Bot Runs 24/7 (Free & Serverless)
+
+Instead of running a continuous background node process (which is expensive and difficult to keep running 24/7), this project runs **100% serverlessly** on Vercel:
+
+1. **On-Demand Webhooks**: When a user sends a message to the bot on Telegram, Telegram immediately triggers an HTTP POST request to your Vercel webhook endpoint (`/api/webhook`).
+2. **Instant Wakeup**: Vercel spins up a Serverless Function, passes the update to `bot.js`, processes the conversation step, updates state/database, and responds to the user.
+3. **Automatic Shut Down**: The function shuts down immediately after replying, consuming resources only when active.
+
+This makes your Telegram bot **100% stable, active 24/7, and free** without needing a persistent host!
