@@ -1,27 +1,22 @@
 const express = require('express');
-const fs = require('fs');
 const path = require('path');
+const { loadReports, resolveReport } = require('./db');
 
-module.exports = function startDashboard(reportsFilePath) {
+module.exports = function startDashboard() {
   const app = express();
   const PORT = process.env.PORT || 3000;
 
   app.use(express.json());
 
-  // Serve dashboard.html on root
+  // Serve index.html on root
   app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dashboard.html'));
+    res.sendFile(path.join(__dirname, 'index.html'));
   });
 
   // Get reports API
-  app.get('/api/reports', (req, res) => {
+  app.get('/api/reports', async (req, res) => {
     try {
-      if (!fs.existsSync(reportsFilePath)) {
-        return res.json([]);
-      }
-      const raw = fs.readFileSync(reportsFilePath, 'utf8');
-      const reports = JSON.parse(raw || '[]');
-      
+      const reports = await loadReports();
       // Map to ensure status field exists
       const mapped = reports.map((r, index) => ({
         id: index + 1, // 1-based ID matching reference number
@@ -35,22 +30,14 @@ module.exports = function startDashboard(reportsFilePath) {
   });
 
   // Resolve report API
-  app.post('/api/reports/resolve', (req, res) => {
+  app.post('/api/reports/resolve', async (req, res) => {
     const { timestamp } = req.body;
     if (!timestamp) return res.status(400).json({ error: 'Missing timestamp' });
 
     try {
-      if (!fs.existsSync(reportsFilePath)) {
-        return res.status(404).json({ error: 'No reports found' });
-      }
-      const raw = fs.readFileSync(reportsFilePath, 'utf8');
-      const reports = JSON.parse(raw || '[]');
-      
-      const report = reports.find(r => r.timestamp === timestamp);
-      if (report) {
-        report.status = 'resolved';
-        fs.writeFileSync(reportsFilePath, JSON.stringify(reports, null, 2));
-        return res.json({ success: true, report });
+      const result = await resolveReport(timestamp);
+      if (result.success) {
+        return res.json({ success: true, report: result.report });
       }
       res.status(404).json({ error: 'Report not found' });
     } catch (err) {
