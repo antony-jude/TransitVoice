@@ -13,7 +13,7 @@ Restructured to deploy on **Vercel** as serverless functions backed by **Vercel 
   - Reports overcrowding, rash driving, delays, harassment, and more.
   - Automatically flags harassment reports with immediate helpline resource guidance.
 - **📊 Real-time Dashboard**:
-  - Sleek, modern **Sky Blue & White** card-based theme.
+  - Sleek, modern **Sky Blue & White** card-based theme (inspired by the MTC bus logo).
   - Real-time KPI summaries (Total, Pending, Resolved, and Harassment counts).
   - Search reports by keywords, filter by category/status, and toggle 10-second auto-refresh.
   - Interactive "Resolve" button with micro-animations to instantly update status in database.
