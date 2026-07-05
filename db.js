@@ -9,7 +9,13 @@ const isVercel = !!process.env.VERCEL;
 async function getRedisClient() {
   if (process.env.REDIS_URL) {
     const { createClient } = require('redis');
-    const client = createClient({ url: process.env.REDIS_URL });
+    const client = createClient({ 
+      url: process.env.REDIS_URL,
+      socket: {
+        reconnectStrategy: false,
+        connectTimeout: 3000
+      }
+    });
     await client.connect();
     return client;
   }
