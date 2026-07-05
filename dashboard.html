@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TransitVoice Dashboard — Monitor Reports</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg-primary: #f0f6ff; /* light sky blue tint */
+      --bg-secondary: #ffffff; /* white panels */
+      --bg-card: #ffffff; /* white cards */
+      --bg-card-hover: #f8faff; /* very soft sky-tint hover */
+      --border-color: #e2effd; /* light sky-blue border */
+      --text-primary: #0f172a; /* dark slate */
+      --text-secondary: #475569; /* slate-600 */
+      
+      --color-primary: #0284c7; /* Sky Blue */
+      --color-secondary: #0ea5e9; /* Sky 500 */
+      --gradient-accent: linear-gradient(135deg, #0ea5e9, #0284c7);
+      
+      --status-pending-text: #b45309; /* amber-700 */
+      --status-pending-bg: rgba(245, 158, 11, 0.08);
+      --status-pending-border: rgba(245, 158, 11, 0.2);
+
+      --status-resolved-text: #047857; /* emerald-700 */
+      --status-resolved-bg: rgba(16, 185, 129, 0.08);
+      --status-resolved-border: rgba(16, 185, 129, 0.2);
+
+      --category-overcrowding: #0284c7;
+      --category-rash: #ea580c;
+      --category-delay: #ca8a04;
+      --category-harassment: #dc2626;
+      --category-other: #475569;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.1) 0%, transparent 45%),
+        radial-gradient(circle at 90% 80%, rgba(56, 189, 248, 0.08) 0%, transparent 45%);
+    }
+
+    /* Layout Container */
+    .dashboard-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2.5rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 1.5rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      background: var(--gradient-accent);
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+    }
+
+    .brand h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #0f172a 30%, #0284c7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: 0.1rem;
+    }
+
+    .live-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      background: var(--bg-secondary);
+      padding: 0.5rem 1rem;
+      border-radius: 99px;
+      border: 1px solid var(--border-color);
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--status-resolved-text);
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .pulse-dot::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-color: var(--status-resolved-text);
+      border-radius: 50%;
+      animation: pulse 1.8s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(2.8); opacity: 0; }
+    }
+
+    /* KPI Summary Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      backdrop-filter: blur(12px);
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.08), 0 8px 10px -6px rgba(14, 165, 233, 0.08);
+      border-color: rgba(14, 165, 233, 0.15);
+    }
+
+    .kpi-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .kpi-total .kpi-icon { background: rgba(14, 165, 233, 0.1); color: var(--color-primary); }
+    .kpi-pending .kpi-icon { background: rgba(245, 158, 11, 0.1); color: var(--status-pending-text); }
+    .kpi-resolved .kpi-icon { background: rgba(16, 185, 129, 0.1); color: var(--status-resolved-text); }
+    .kpi-urgency .kpi-icon { background: rgba(239, 68, 68, 0.1); color: var(--category-harassment); }
+
+    .kpi-info h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      margin-bottom: 0.25rem;
+    }
+
+    .kpi-info .value {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+
+    /* Filters Bar */
+    .controls-bar {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 280px;
+      position: relative;
+    }
+
+    .search-box i {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-secondary);
+      pointer-events: none;
+    }
+
+    .search-box input {
+      width: 100%;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 0.75rem 1rem 0.75rem 2.75rem;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+    }
+
+    .filter-dropdowns {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .dropdown {
+      position: relative;
+    }
+
+    .dropdown select {
+      appearance: none;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 0.75rem 2.25rem 0.75rem 1rem;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      cursor: pointer;
+      min-width: 150px;
+      transition: border-color 0.2s;
+    }
+
+    .dropdown select:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12);
+    }
+
+    .dropdown::after {
+      content: '';
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 5px solid transparent;
+      border-top-color: var(--text-secondary);
+      pointer-events: none;
+    }
+
+    .auto-refresh-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-left: auto;
+      cursor: pointer;
+    }
+
+    /* Switch Style Toggle */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+    }
+
+    .switch input { 
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--bg-primary);
+      transition: .3s;
+      border-radius: 34px;
+      border: 1px solid var(--border-color);
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 2px;
+      bottom: 2px;
+      background-color: var(--text-secondary);
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--color-primary);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+      background-color: #fff;
+    }
+
+    /* Reports Section */
+    .reports-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .reports-section-header h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .reports-count-badge {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    /* Reports Grid */
+    .reports-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1.5rem;
+    }
+
+    /* Report Card */
+    .report-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 240px;
+      position: relative;
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+      animation: fadeIn 0.4s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .report-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 25px -5px rgba(14, 165, 233, 0.12), 0 8px 10px -6px rgba(14, 165, 233, 0.12);
+      border-color: rgba(14, 165, 233, 0.25);
+    }
+
+    /* Visual Treatment for Harassment Issues */
+    .report-card.urgency-high {
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      background: linear-gradient(185deg, var(--bg-card), rgba(239, 68, 68, 0.03));
+      box-shadow: 0 4px 20px rgba(239, 68, 68, 0.05);
+    }
+    
+    .report-card.urgency-high::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--category-harassment);
+      border-radius: 16px 0 0 16px;
+    }
+
+    /* Card Top Bar */
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .card-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .ref-no {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badges {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      text-transform: capitalize;
+    }
+
+    /* Category Badge Colors */
+    .badge-category {
+      background: rgba(14, 165, 233, 0.04);
+      border: 1px solid rgba(14, 165, 233, 0.08);
+    }
+    .badge-category.overcrowding { color: var(--category-overcrowding); border-color: rgba(2, 132, 199, 0.2); background: rgba(2, 132, 199, 0.05); }
+    .badge-category.rash_driving { color: var(--category-rash); border-color: rgba(234, 88, 12, 0.2); background: rgba(234, 88, 12, 0.05); }
+    .badge-category.delay { color: var(--category-delay); border-color: rgba(202, 138, 4, 0.2); background: rgba(202, 138, 4, 0.05); }
+    .badge-category.harassment { color: var(--category-harassment); border-color: rgba(220, 38, 38, 0.3); background: rgba(220, 38, 38, 0.08); }
+    .badge-category.other { color: var(--category-other); border-color: rgba(71, 85, 107, 0.2); background: rgba(71, 85, 107, 0.05); }
+
+    /* Status Badges */
+    .badge-status {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .badge-status.pending {
+      color: var(--status-pending-text);
+      background: var(--status-pending-bg);
+      border: 1px solid var(--status-pending-border);
+    }
+
+    .badge-status.resolved {
+      color: var(--status-resolved-text);
+      background: var(--status-resolved-bg);
+      border: 1px solid var(--status-resolved-border);
+    }
+
+    /* Card Main Body */
+    .card-body {
+      flex: 1;
+      margin-bottom: 1.5rem;
+    }
+
+    .details-text {
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      white-space: pre-wrap;
+    }
+
+    .route-info {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(14, 165, 233, 0.02);
+      border: 1px solid var(--border-color);
+      padding: 0.4rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      width: fit-content;
+    }
+
+    .route-number {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* Card Footer */
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border-color);
+      padding-top: 1rem;
+      margin-top: auto;
+    }
+
+    .reporter-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+    }
+
+    .reporter-info i {
+      color: #38bdf8; /* Telegram blue */
+    }
+
+    .timestamp {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+    }
+
+    .btn-resolve {
+      background: var(--gradient-accent);
+      color: #ffffff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
+    }
+
+    .btn-resolve:hover {
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+      transform: scale(1.02);
+    }
+
+    .btn-resolve:active {
+      transform: scale(0.98);
+    }
+
+    /* Empty state */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 5rem 2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      backdrop-filter: blur(12px);
+    }
+
+    .empty-state i {
+      color: var(--text-secondary);
+      opacity: 0.5;
+    }
+
+    .empty-state h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .empty-state p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      max-width: 320px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .dashboard-container {
+        padding: 1rem;
+      }
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      .controls-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .auto-refresh-container {
+        margin-left: 0;
+        margin-top: 0.5rem;
+      }
+      .reports-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard-container">
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <div class="brand-logo">
+          <i data-lucide="bus" style="color: #fff; width: 24px; height: 24px;"></i>
+        </div>
+        <div>
+          <h1>TransitVoice</h1>
+          <p>MTC Issue Reports Manager</p>
+        </div>
+      </div>
+      
+      <div class="live-status">
+        <div class="pulse-dot"></div>
+        <span>Live updates active</span>
+      </div>
+    </header>
+
+    <!-- KPI Summary Grid -->
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-total">
+        <div class="kpi-icon">
+          <i data-lucide="inbox" style="width: 24px; height: 24px;"></i>
+        </div>
+        <div class="kpi-info">
+          <h3>Total Reports</h3>
+          <div class="value" id="kpi-total-val">0</div>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-pending">
+        <div class="kpi-icon">
+          <i data-lucide="clock" style="width: 24px; height: 24px;"></i>
+        </div>
+        <div class="kpi-info">
+          <h3>Pending</h3>
+          <div class="value" id="kpi-pending-val">0</div>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-resolved">
+        <div class="kpi-icon">
+          <i data-lucide="check-circle-2" style="width: 24px; height: 24px;"></i>
+        </div>
+        <div class="kpi-info">
+          <h3>Resolved</h3>
+          <div class="value" id="kpi-resolved-val">0</div>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-urgency">
+        <div class="kpi-icon">
+          <i data-lucide="alert-triangle" style="width: 24px; height: 24px;"></i>
+        </div>
+        <div class="kpi-info">
+          <h3>Harassment Cases</h3>
+          <div class="value" id="kpi-harassment-val">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls & Filters Bar -->
+    <div class="controls-bar">
+      <!-- Search Input -->
+      <div class="search-box">
+        <i data-lucide="search" style="width: 18px; height: 18px;"></i>
+        <input type="text" id="search-input" placeholder="Search by route, details, or username...">
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-dropdowns">
+        <div class="dropdown">
+          <select id="category-filter">
+            <option value="all">All Categories</option>
+            <option value="overcrowding">🚌 Overcrowding</option>
+            <option value="rash_driving">⚠️ Rash Driving</option>
+            <option value="delay">⏱️ Delay</option>
+            <option value="harassment">🚨 Harassment</option>
+            <option value="other">❓ Other</option>
+          </select>
+        </div>
+
+        <div class="dropdown">
+          <select id="status-filter">
+            <option value="all">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="resolved">Resolved</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Auto Refresh Switch -->
+      <div class="auto-refresh-container" onclick="toggleAutoRefresh(event)">
+        <span>Auto-refresh (10s)</span>
+        <label class="switch">
+          <input type="checkbox" id="refresh-toggle" checked onclick="event.stopPropagation()">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Reports Section Header -->
+    <div class="reports-section-header">
+      <h2>
+        <i data-lucide="list" style="width: 20px; height: 20px; color: var(--color-primary);"></i>
+        <span>Logged Reports</span>
+      </h2>
+      <div class="reports-count-badge" id="visible-count">Showing 0 reports</div>
+    </div>
+
+    <!-- Main Grid containing Reports -->
+    <div class="reports-grid" id="reports-grid">
+      <!-- Content injected by JavaScript -->
+    </div>
+  </div>
+
+  <script>
+    // State management
+    let reports = [];
+    let refreshInterval = null;
+
+    // Element references
+    const reportsGrid = document.getElementById('reports-grid');
+    const searchInput = document.getElementById('search-input');
+    const categoryFilter = document.getElementById('category-filter');
+    const statusFilter = document.getElementById('status-filter');
+    const refreshToggle = document.getElementById('refresh-toggle');
+    const visibleCount = document.getElementById('visible-count');
+
+    // KPI value references
+    const kpiTotalVal = document.getElementById('kpi-total-val');
+    const kpiPendingVal = document.getElementById('kpi-pending-val');
+    const kpiResolvedVal = document.getElementById('kpi-resolved-val');
+    const kpiHarassmentVal = document.getElementById('kpi-harassment-val');
+
+    // Fetch reports from backend API
+    async function fetchReports() {
+      try {
+        const response = await fetch('/api/reports');
+        if (!response.ok) throw new Error('API request failed');
+        reports = await response.json();
+        
+        // Sort reports: newest first
+        reports.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        
+        updateKPIs();
+        renderReports();
+      } catch (err) {
+        console.error('Error fetching reports:', err);
+      }
+    }
+
+    // Resolve a report
+    async function resolveReport(timestamp, buttonElement) {
+      // Add visual loading state
+      const originalText = buttonElement.innerHTML;
+      buttonElement.innerHTML = `<i data-lucide="loader-2" class="animate-spin" style="width: 14px; height: 14px;"></i> Resolving...`;
+      buttonElement.disabled = true;
+      lucide.createIcons();
+
+      try {
+        const response = await fetch('/api/reports/resolve', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ timestamp })
+        });
+
+        if (!response.ok) throw new Error('Failed to resolve report');
+        
+        // Find locally and update
+        const report = reports.find(r => r.timestamp === timestamp);
+        if (report) {
+          report.status = 'resolved';
+        }
+        
+        // Smooth transition and updates
+        updateKPIs();
+        renderReports();
+      } catch (err) {
+        console.error('Error resolving report:', err);
+        buttonElement.innerHTML = originalText;
+        buttonElement.disabled = false;
+        lucide.createIcons();
+      }
+    }
+
+    // Update KPIs based on the global reports list
+    function updateKPIs() {
+      const total = reports.length;
+      const pending = reports.filter(r => r.status === 'pending').length;
+      const resolved = reports.filter(r => r.status === 'resolved').length;
+      const harassment = reports.filter(r => r.category === 'harassment').length;
+
+      // Animate text counter
+      animateCounter(kpiTotalVal, total);
+      animateCounter(kpiPendingVal, pending);
+      animateCounter(kpiResolvedVal, resolved);
+      animateCounter(kpiHarassmentVal, harassment);
+    }
+
+    function animateCounter(element, target) {
+      const current = parseInt(element.textContent) || 0;
+      if (current === target) return;
+      
+      const duration = 400; // ms
+      const startTime = performance.now();
+
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        // Easing out quadratic
+        const ease = progress * (2 - progress);
+        const value = Math.round(current + (target - current) * ease);
+        element.textContent = value;
+
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        }
+      }
+      requestAnimationFrame(update);
+    }
+
+    // Render reports based on active search and filter options
+    function renderReports() {
+      const searchQuery = searchInput.value.toLowerCase().trim();
+      const selectedCategory = categoryFilter.value;
+      const selectedStatus = statusFilter.value;
+
+      // Apply filtering
+      const filtered = reports.filter(r => {
+        const matchesSearch = 
+          r.route.toLowerCase().includes(searchQuery) ||
+          r.details.toLowerCase().includes(searchQuery) ||
+          r.username.toLowerCase().includes(searchQuery);
+          
+        const matchesCategory = selectedCategory === 'all' || r.category === selectedCategory;
+        const matchesStatus = selectedStatus === 'all' || r.status === selectedStatus;
+
+        return matchesSearch && matchesCategory && matchesStatus;
+      });
+
+      visibleCount.textContent = `Showing ${filtered.length} of ${reports.length} reports`;
+
+      // Clear grid
+      reportsGrid.innerHTML = '';
+
+      if (filtered.length === 0) {
+        reportsGrid.innerHTML = `
+          <div class="empty-state">
+            <i data-lucide="info" style="width: 48px; height: 48px;"></i>
+            <h3>No reports found</h3>
+            <p>Try modifying your search query or filters.</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      // Build cards
+      filtered.forEach(report => {
+        const card = document.createElement('div');
+        card.className = `report-card ${report.category === 'harassment' ? 'urgency-high' : ''}`;
+        
+        // Category Label Formatting
+        let categoryEmoji = '❓';
+        let categoryLabel = report.category;
+        if (report.category === 'overcrowding') { categoryEmoji = '🚌'; categoryLabel = 'Overcrowding'; }
+        else if (report.category === 'rash_driving') { categoryEmoji = '⚠️'; categoryLabel = 'Rash Driving'; }
+        else if (report.category === 'delay') { categoryEmoji = '⏱️'; categoryLabel = 'Delay'; }
+        else if (report.category === 'harassment') { categoryEmoji = '🚨'; categoryLabel = 'Harassment'; }
+
+        // Date String clean formatting
+        const dateObj = new Date(report.timestamp);
+        const dateFormatted = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        const timeFormatted = dateObj.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+        const timeAgo = formatTimeAgo(dateObj);
+
+        const statusIcon = report.status === 'resolved' ? 'check-circle' : 'circle';
+        
+        card.innerHTML = `
+          <div>
+            <div class="card-header">
+              <div class="card-meta">
+                <div class="ref-no">Ref #${report.id}</div>
+                <div class="badges">
+                  <span class="badge badge-category ${report.category}">${categoryEmoji} ${categoryLabel}</span>
+                  <span class="badge badge-status ${report.status}">
+                    <i data-lucide="${statusIcon}" style="width: 12px; height: 12px;"></i>
+                    ${report.status}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card-body">
+              <p class="details-text">${escapeHTML(report.details)}</p>
+              <div class="route-info">
+                <i data-lucide="navigation" style="width: 14px; height: 14px;"></i>
+                <span>Route: <span class="route-number">${escapeHTML(report.route)}</span></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <div>
+              <div class="reporter-info">
+                <i data-lucide="send" style="width: 12px; height: 12px;"></i>
+                <span>@${escapeHTML(report.username)}</span>
+              </div>
+              <div class="timestamp" title="${dateFormatted} at ${timeFormatted}">
+                ${timeAgo}
+              </div>
+            </div>
+
+            ${report.status === 'pending' ? `
+              <button class="btn-resolve" onclick="resolveReport('${report.timestamp}', this)">
+                <i data-lucide="check" style="width: 14px; height: 14px;"></i>
+                <span>Resolve</span>
+              </button>
+            ` : ''}
+          </div>
+        `;
+
+        reportsGrid.appendChild(card);
+      });
+
+      // Render icons
+      lucide.createIcons();
+    }
+
+    // Helper functions
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      );
+    }
+
+    function formatTimeAgo(date) {
+      const seconds = Math.floor((new Date() - date) / 1000);
+      if (seconds < 5) return 'Just now';
+      
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 1) return `${seconds} seconds ago`;
+      if (minutes < 60) return `${minutes}m ago`;
+      
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours}h ago`;
+      
+      const days = Math.floor(hours / 24);
+      return `${days}d ago`;
+    }
+
+    // Toggle Auto Refresh
+    function toggleAutoRefresh(e) {
+      const checkbox = refreshToggle;
+      if (e.target !== checkbox) {
+        checkbox.checked = !checkbox.checked;
+      }
+      
+      setupAutoRefresh();
+    }
+
+    function setupAutoRefresh() {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+      }
+
+      if (refreshToggle.checked) {
+        refreshInterval = setInterval(fetchReports, 10000);
+      }
+    }
+
+    // Event listeners
+    searchInput.addEventListener('input', renderReports);
+    categoryFilter.addEventListener('change', renderReports);
+    statusFilter.addEventListener('change', renderReports);
+    refreshToggle.addEventListener('change', setupAutoRefresh);
+
+    // Initial setup
+    fetchReports();
+    setupAutoRefresh();
+  </script>
+</body>
+</html>
